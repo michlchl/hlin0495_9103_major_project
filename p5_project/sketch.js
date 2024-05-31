@@ -1,11 +1,11 @@
 let whiteDots = []; // empty array to save the white dots in the background (group)
-let coloredCircles = []; //empty array to save the attributes about the circle (group)
+let coloredCircles = []; //empty array to save the attributes of the circle (group)
 let particles = [];
-let song;
-let analyzer;
-let volume = 1.0;
-let pan = 0.0;
-let isPlaying = false;
+let song; // hold the sound file
+let analyzer; // analyze the amplitude
+let volume = 1.0; // control volume
+let pan = 0.0; // control panning
+let isPlaying = false; 
 
 // Create a class for the white dots
 class WhiteDot {
@@ -13,14 +13,15 @@ class WhiteDot {
     this.position = createVector(x, y);
     this.size = size;
     this.speed = speed;
-    this.trail = [];
+    this.trail = []; // empty array to save the previous position of the dot
   }
 
+  // update the position of white dots based on mouse position and prevent collisions
   move() {
     let mousePos = createVector(mouseX, mouseY);
     let direction = p5.Vector.sub(mousePos, this.position).normalize().mult(this.speed);
-    let randomOffset = p5.Vector.random2D().mult(0.5);
-    this.position.add(direction).add(randomOffset);
+    let randomOffset = p5.Vector.random2D().mult(0.5); // randomess in dot's movement
+    this.position.add(direction).add(randomOffset); //update dot's position
 
     for (let otherDot of whiteDots) {
       if (otherDot !== this) {
@@ -28,7 +29,7 @@ class WhiteDot {
         let minDistance = this.size + otherDot.size + 10;
         if (distance < minDistance) {
           let pushDirection = p5.Vector.sub(this.position, otherDot.position).normalize().mult(0.1);
-          this.position.add(pushDirection);
+          this.position.add(pushDirection); // avoid overlap
         }
       }
     }
@@ -36,12 +37,14 @@ class WhiteDot {
     this.position.x = constrain(this.position.x, 0, width);
     this.position.y = constrain(this.position.y, 0, height);
 
+    // if the trail length > 50, the oldest position is removed from the beginning of the array, creating the trail effect
     this.trail.push(this.position.copy());
     if (this.trail.length > 50) {
       this.trail.shift();
     }
   }
 
+  // the draw function creates the white dot as a circle and draws a trail behind it using the positions saved in the trail array.
   draw(dotSize) {
     noStroke();
     fill(255);
@@ -50,8 +53,8 @@ class WhiteDot {
     beginShape();
     for (let point of this.trail) {
       vertex(point.x, point.y);
-    }
-    endShape();
+    } //goes through each point in the trail array (which contains the previous positions of the dot) and adds a vertex at each point's x and y coordinates using the vertex function.
+    endShape(); // connect the last vertex to the first vertex to create trail effect
   }
 }
 
@@ -61,7 +64,7 @@ class ColoredCircle {
     this.position = createVector(x, y); //createVector() is a function to create a two-dimensional vector
     this.radius = radius;
     this.colors = colors;
-    this.animationState = 0;
+    this.animationState = 0; // initialize the animation state of the circle
   }
 
   draw(scale) {
@@ -79,6 +82,8 @@ class ColoredCircle {
     ellipse(this.position.x, this.position.y, 80 * scale * this.getAnimationScale()); //the radius for the small circle is 80
   }
 
+  // based on the "animationState", this method adjusts the size of the circles by using sin to create pulsating effect
+  // goal is to create growing and shrinking effect of the circles
   getAnimationScale() {
     let animationScale = 1;
     if (this.animationState === 1) {
@@ -90,6 +95,7 @@ class ColoredCircle {
   }
 }
 
+// turn white dots into meteor
 class Particle {
   constructor(x, y, color) {
     this.position = createVector(x, y);
@@ -100,7 +106,7 @@ class Particle {
 
   update() {
     this.position.add(this.velocity);
-    this.lifespan -= 2;
+    this.lifespan -= 2; // particle fading over time
   }
 
   draw() {
@@ -109,22 +115,28 @@ class Particle {
     point(this.position.x, this.position.y);
   }
 
-  isDead() {
+  // check if the particle's lifespan has ended, less than 0 means it's dead and should be removed
+  isDead() { 
     return this.lifespan < 0;
   }
 }
 
+
+// load the sound file
 function preload() {
   song = loadSound('assets/baroque-brilliance-instrumental-music-211822.mp3');
 }
 
 function setup() {
+  //let the width and height became the size of the canvas
   createCanvas(windowWidth, windowHeight);
   drawCircles();
 
-  analyzer = new p5.Amplitude();
+  // amp analyzer
+  analyzer = new p5.Amplitude(); //measure the volume of the sound
   analyzer.setInput(song);
 
+  // create 250 white dots
   for (let i = 0; i < 250; i++) {
     let x = random(width);
     let y = random(height);
@@ -133,6 +145,7 @@ function setup() {
     whiteDots.push(new WhiteDot(x, y, size, speed));
   }
 
+  // play/pause button
   let button = createButton('Play/Pause');
   button.position((width - button.width) / 2, height - button.height - 2);
   button.mousePressed(play_pause);
@@ -144,37 +157,23 @@ function draw() {
     let level = analyzer.getLevel();
     let scale = map(level, 0, 1, 0.5, 2);
 
+    // draw coloured circles
     for (let circle of coloredCircles) {
       circle.draw(scale);
     }
-
-    for (let i = particles.length - 1; i >= 0; i--) {
-      let particle = particles[i];
-      particle.update();
-      particle.draw();
-      if (particle.isDead()) {
-        particles.splice(i, 1);
-      }
-    }
-
-    if (level > 0.8) {
+    
+    // circles' animation state
+    if (level > 0.8) { // high amp level
       for (let circle of coloredCircles) {
         circle.animationState = 1;
       }
-    } else if (level < 0.2) {
+    } else if (level < 0.2) { // low amp level
       for (let circle of coloredCircles) {
         circle.animationState = 2;
       }
-    } else {
+    } else { // medium amp level
       for (let circle of coloredCircles) {
         circle.animationState = 0;
-      }
-    }
-
-    if (level > 0.5 && particles.length < 1000) {
-      for (let dot of whiteDots) {
-        let color = color(255, 255, 255, random(50, 200));
-        particles.push(new Particle(dot.position.x, dot.position.y, color));
       }
     }
   }
@@ -182,31 +181,35 @@ function draw() {
 
 function drawCircles() {
   coloredCircles = [];
-  let largeCircleColors = [color(217, 233, 237), color(174, 195, 112), color(253, 185, 93), color(255, 200, 198), color(246, 232, 141), color(235, 203, 246), color(67, 200, 176)];
-  let mediumCircleColors = [color(14, 13, 116), color(9, 102, 23), color(244, 68, 46), color(229, 83, 192), color(239, 126, 45), color(253, 185, 93), color(250, 251, 253)];
-  let smallCircleColors = [color(244, 147, 96), color(228, 93, 86), color(0, 0, 0), color(174, 195, 112), color(38, 75, 207), color(155, 100, 209), color(63, 73, 97)];
-  let circlePositions = [createVector(width * 0.4, height * 0.1), createVector(width * 0.1, height * 0.35), createVector(width * 0.85, height * 0.25), createVector(width * 0.5, height * 0.5), createVector(width * 0.15, height * 0.75), createVector(width * 0.55, height * 0.9), createVector(width * 0.9, height * 0.73)];
+  let largeCircleColors = [color(217, 233, 237), color(174, 195, 112), color(253, 185, 93), color(255, 200, 198), color(246, 232, 141), color(235, 203, 246), color(67, 200, 176)]; //large circles colour
+  let mediumCircleColors = [color(14, 13, 116), color(9, 102, 23), color(244, 68, 46), color(229, 83, 192), color(239, 126, 45), color(253, 185, 93), color(250, 251, 253)]; //medium circles colour
+  let smallCircleColors = [color(244, 147, 96), color(228, 93, 86), color(0, 0, 0), color(174, 195, 112), color(38, 75, 207), color(155, 100, 209), color(63, 73, 97)]; //small circles colour
+  let circlePositions = [createVector(width * 0.4, height * 0.1), createVector(width * 0.1, height * 0.35), createVector(width * 0.85, height * 0.25), createVector(width * 0.5, height * 0.5), createVector(width * 0.15, height * 0.75), createVector(width * 0.55, height * 0.9), createVector(width * 0.9, height * 0.73)]; // circles' x and y position
 
+  //the for loop goes through each position in the circlePositions array
   for (let i = 0; i < circlePositions.length; i++) {
+    //get the color at position i in the array,and combines them into a array called colorsSet
     let colorsSet = [largeCircleColors[i], mediumCircleColors[i], smallCircleColors[i]];
+    //based on the position, radius and color, create a new ColoredCircle object and add it to the coloredCircles array
+    //the radisu for the large circle is 120
     coloredCircles.push(new ColoredCircle(circlePositions[i].x, circlePositions[i].y, 120, colorsSet));
   }
 }
 
 function drawBackground() {
-  background(4, 80, 111);
+  background(4, 80, 111); //set background color
   let level = analyzer.getLevel();
   let dotSize = map(level, 0, 1, 0.5, 2);
-  for (let dot of whiteDots) {
+  for (let dot of whiteDots) { //draw white dots on the background
     dot.move();
     dot.draw(dotSize);
   }
 }
 
 function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
-  whiteDots = [];
-  drawCircles();
+  resizeCanvas(windowWidth, windowHeight); //to make the canvas fit the screen
+  whiteDots = []; // after resize the canvas, make the array empty
+  drawCircles(); //redraw the drawCircles() function
   for (let i = 0; i < 250; i++) {
     let x = random(width);
     let y = random(height);

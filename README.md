@@ -1,4 +1,4 @@
-# hlin0495_9103_tut9
+# hlin0495_9103_major_project
 
 ## QUIZ 8
 
