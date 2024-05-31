@@ -1,6 +1,6 @@
 let whiteDots = []; // empty array to save the white dots in the background (group)
 let coloredCircles = []; //empty array to save the attributes of the circle (group)
-let particles = [];
+let particles = []; // empty array to save the particle objects
 let song; // hold the sound file
 let analyzer; // analyze the amplitude
 let volume = 1.0; // control volume
@@ -229,6 +229,7 @@ function play_pause() {
   }
 }
 
+// adjust the volume and panning based on mouse's position
 function mouseMoved() {
   volume = map(mouseY, 0, height, 1, 0);
   song.setVolume(volume);
