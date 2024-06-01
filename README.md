@@ -21,7 +21,11 @@ Audio - Use the level or frequency content of an audio track to animate the artw
 - White Dots Movement: The white dots move across the screen, following the mouse position with a slight randomness added to their movement. They leave trails behind them, creating a meteor effect. The size of the white dots is also influenced by the audio amplitude, scaling their size accordingly.
 
 ### Inspiration:
-- (insert)
+- Initially, I had the white dots in the background growing and shrinking like the large colored circles, but the entire screen felt too overwhelming. Inspired by the dark purple background and white dots, which reminded me of a galaxy, I transformed the white dots into meteors with tails. These meteors follow the mouse direction when users adjust the volume and panning, creating an interactive effect to the experience.
+
+    ![Image from Adobe Stock](readmeImages/meteor.png)
+
+- The colored circles we created for our group assignments remind me of speakers. When music plays, speakers vibrate, as shown in this [YouTube Video](https://youtu.be/njxbQtKKlME?si=sUpTYFG1i35hMXDc&t=5). This inspired me to add a growing and shrinking effect to the circles, simulating the movement of vibrating speakers.
 
 ### Technical Explanation:
 The animation is powered by the p5.js library, which provides a straightforward way to create interactive and dynamic visualizations. The `preload` function loads the audio file, and the `setup` function initializes the canvas, creates the colored circles, and spawns the white dots.
